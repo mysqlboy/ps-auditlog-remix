@@ -71,3 +71,6 @@ mysql> show global variables like '%audit%';
 +--------------------------+--------------+
 8 rows in set (0.00 sec)
 ```
+
+Read the documentation from Percona here;
+http://www.percona.com/doc/percona-server/5.5/management/audit_log_plugin.html
