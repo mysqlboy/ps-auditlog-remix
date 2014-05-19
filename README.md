@@ -25,7 +25,8 @@ CSV example
 ```
 "Query","7459961_2014-05-16T21:31:25","2014-05-16T21:51:08
 UTC","select","1",0,"select * from world.City","moore[moore] @ localhost
-[]","localhost","",""```
+[]","localhost","",""
+```
 
 Hopefully the need for these patches are limited as the development of the
 product evolves.
