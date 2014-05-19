@@ -33,4 +33,41 @@ product evolves.
 
 ## Installation
 
-Copy the compiled
+Find out the location of your plugin directory
+```
+mysql> show global variables like 'plugin_dir';
++---------------+--------------------------+
+| Variable_name | Value                    |
++---------------+--------------------------+
+| plugin_dir    | /usr/lib64/mysql/plugin/ |
++---------------+--------------------------+
+1 row in set (0.00 sec)
+```
+
+Copy the compiled plugin (shared object file) to the plugin directory
+```
+$ sudo cp audit_log.5x.so /usr/lib64/mysql/plugin/audit_log.so
+```
+
+Issue the install command for the audit plugin.
+```
+mysql> INSTALL PLUGIN audit_log SONAME 'audit_log.so';
+```
+
+Review the defaults for the plugin option variables.
+```
+mysql> show global variables like '%audit%';
++--------------------------+--------------+
+| Variable_name            | Value        |
++--------------------------+--------------+
+| audit_log_buffer_size    | 1048576      |
+| audit_log_file           | audit.log    |
+| audit_log_flush          | OFF          |
+| audit_log_format         | JSON         |
+| audit_log_policy         | ALL          |
+| audit_log_rotate_on_size | 0            |
+| audit_log_rotations      | 0            |
+| audit_log_strategy       | ASYNCHRONOUS |
++--------------------------+--------------+
+8 rows in set (0.00 sec)
+```
