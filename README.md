@@ -30,3 +30,7 @@ UTC","select","1",0,"select * from world.City","moore[moore] @ localhost
 
 Hopefully the need for these patches are limited as the development of the
 product evolves.
+
+## Installation
+
+Copy the compiled

@@ -1,0 +1,71 @@
+--- ./percona-server-5.6.17-65.0/plugin/audit_log/audit_log.c	2014-05-06 13:19:25.000000000 +0000
++++ ./percona-server-5.6.17-65.0.patched/plugin/audit_log/audit_log.c	2014-05-16 21:17:31.179577971 +0000
+@@ -35,7 +35,7 @@
+ enum audit_log_policy_t { ALL, NONE, LOGINS, QUERIES };
+ enum audit_log_strategy_t
+   { ASYNCHRONOUS, PERFORMANCE, SEMISYNCHRONOUS, SYNCHRONOUS };
+-enum audit_log_format_t { OLD, NEW };
++enum audit_log_format_t { OLD, NEW, JSON, CSV };
+ 
+ static LOGGER_HANDLE *audit_file_logger= NULL;
+ static audit_log_buffer_t *audit_log_buffer= NULL;
+@@ -49,7 +49,7 @@ ulonglong audit_log_buffer_size= 1048576
+ ulonglong audit_log_rotate_on_size= 0;
+ ulonglong audit_log_rotations= 0;
+ char audit_log_flush= FALSE;
+-ulong audit_log_format= OLD;
++ulong audit_log_format= JSON;
+ 
+ 
+ static
+@@ -243,7 +243,7 @@ char *escape_string(const char *in, size
+                          char *out, size_t outlen)
+ {
+   typedef char *(*escape_func_t)(const char *, size_t, char *, size_t);
+-  const escape_func_t escape_func[] = { attr_escape_string, xml_escape_string };
++  const escape_func_t escape_func[] = { attr_escape_string, xml_escape_string, attr_escape_string, attr_escape_string };
+ 
+   return escape_func[audit_log_format](in, inlen, out, outlen);
+ }
+@@ -356,7 +356,9 @@ size_t audit_log_audit_record(char *buf,
+                      "  <MYSQL_VERSION>%s</MYSQL_VERSION>\n"
+                      "  <STARTUP_OPTIONS>%s</STARTUP_OPTIONS>\n"
+                      "  <OS_VERSION>"MACHINE_TYPE"-"SYSTEM_TYPE"</OS_VERSION>\n"
+-                     "</AUDIT_RECORD>\n" };
++                     "</AUDIT_RECORD>\n",
++		     "{\"audit_record\":{\"name\":\"%s\",\"record\":\"%s\",\"timestamp\":\"%s\",\"mysql_version\":\"%s\",\"startup_optionsi\":\"%s\",\"os_version\":\""MACHINE_TYPE"-"SYSTEM_TYPE"\"}} \n",
++		     "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\""MACHINE_TYPE"-"SYSTEM_TYPE"\"\n" };
+ 
+   return my_snprintf(buf, buflen,
+                      format_string[audit_log_format],
+@@ -403,7 +405,9 @@ size_t audit_log_general_record(char *bu
+                      "  <HOST>%s</HOST>\n"
+                      "  <OS_USER>%s</OS_USER>\n"
+                      "  <IP>%s</IP>\n"
+-                     "</AUDIT_RECORD>\n" };
++                     "</AUDIT_RECORD>\n",
++                     "{\"audit_record\":{\"name\":\"%s\",\"record\":\"%s\",\"timestamp\":\"%s\",\"command_class\":\"%s\",\"connection_id\":\"%lu\",\"status\":%d,\"sqltext\":\"%s\",\"user\":\"%s\",\"host\":\"%s\",\"os_user\":\"%s\",\"ip\":\"%s\"}} \n",
++		     "\"%s\",\"%s\",\"%s\",\"%s\",\"%lu\",%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\" \n" };
+ 
+   return my_snprintf(buf, buflen,
+                      format_string[audit_log_format],
+@@ -456,7 +460,9 @@ size_t audit_log_connection_record(char 
+                      "  <HOST>%s</HOST>\n"
+                      "  <IP>%s</IP>\n"
+                      "  <DB>%s</DB>\n"
+-                     "</AUDIT_RECORD>\n" };
++                     "</AUDIT_RECORD>\n",
++                     "{\"audit_record\":{\"name\":\"%s\",\"record\":\"%s\",\"timestamp\":\"%s\",\"connection_id\":\"%lu\",\"status\":%d,\"user\":\"%s\",\"priv_user\":\"%s\",\"os_login\":\"%s\",\"proxy_user\":\"%s\",\"host\":\"%lu\",\"ip\":\"%s\",\"db\":\"%s\"}}\n",
++		     "\"%s\",\"%s\",\"%s\",\"%lu\",%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\" \n" };
+ 
+   return my_snprintf(buf, buflen,
+                      format_string[audit_log_format],
+@@ -681,7 +687,7 @@ static MYSQL_SYSVAR_ENUM(strategy, audit
+        ASYNCHRONOUS, &audit_log_strategy_typelib);
+ 
+ static const char *audit_log_format_names[]=
+-  { "OLD", "NEW", 0 };
++  { "OLD", "NEW", "JSON", "CSV", 0 };
+ static TYPELIB audit_log_format_typelib=
+ {
+     array_elements(audit_log_format_names) - 1, "audit_log_format_typelib",
